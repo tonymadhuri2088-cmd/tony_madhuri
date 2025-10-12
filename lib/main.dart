@@ -1,174 +1,260 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  runApp(InvenTrackApp());
+  runApp(const MyApp());
 }
 
-class InvenTrackApp extends StatelessWidget {
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'InvenTrack',
-      theme: ThemeData(primarySwatch: Colors.indigo),
-      home: LoginPage(),
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const FrontPage(),
     );
   }
 }
 
-class LoginPage extends StatelessWidget {
-  void navigateToShopkeeperForm(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ShopkeeperFormPage()),
-    );
-  }
-
-  void navigateToConsumerView(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ConsumerViewPage()),
-    );
-  }
+class FrontPage extends StatelessWidget {
+  const FrontPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: const Text('InvenTrack')),
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Welcome to InvenTrack',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 50),
-              Text(
-                'Login as:',
-                style: TextStyle(fontSize: 20),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => navigateToShopkeeperForm(context),
-                child: Text('Shopkeeper'),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: Size(double.infinity, 50),
-                ),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => navigateToConsumerView(context),
-                child: Text('Consumer'),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: Size(double.infinity, 50),
-                ),
-              ),
-            ],
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              child: const Text('Shopkeeper'),
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const ShopkeeperLoginPage()));
+              },
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              child: const Text('Customer'),
+              onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const CustomerPage()));
+              },
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-// Shopkeeper Form
-class ShopkeeperFormPage extends StatefulWidget {
+class ShopkeeperLoginPage extends StatefulWidget {
+  const ShopkeeperLoginPage({super.key});
+
   @override
-  _ShopkeeperFormPageState createState() => _ShopkeeperFormPageState();
+  State<ShopkeeperLoginPage> createState() => _ShopkeeperLoginPageState();
 }
 
-class _ShopkeeperFormPageState extends State<ShopkeeperFormPage> {
+class _ShopkeeperLoginPageState extends State<ShopkeeperLoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController emailMobileController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  String errorMsg = '';
 
-  void submitForm() {
-    if (_formKey.currentState!.validate()) {
-      // Normally, save data to backend or local DB
-      String name = nameController.text;
-      String email = emailController.text;
-      String phone = phoneController.text;
+  void login() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedEmail = prefs.getString('email') ?? '';
+    final storedMobile = prefs.getString('mobile') ?? '';
+    final storedPassword = prefs.getString('password') ?? '';
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Shopkeeper Registered: $name')),
-      );
-
-      // Navigate to shopkeeper dashboard or inventory page
+    if ((emailMobileController.text == storedEmail ||
+            emailMobileController.text == storedMobile) &&
+        passwordController.text == storedPassword) {
+      setState(() {
+        errorMsg = '';
+      });
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Login Successful')));
+    } else {
+      setState(() {
+        errorMsg = 'Invalid credentials';
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Shopkeeper Form')),
+      appBar: AppBar(title: const Text('Shopkeeper Login')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                controller: nameController,
-                decoration: InputDecoration(labelText: 'Name'),
-                validator: (val) => val!.isEmpty ? 'Enter name' : null,
-              ),
-              SizedBox(height: 10),
-              TextFormField(
-                controller: emailController,
-                decoration: InputDecoration(labelText: 'Email'),
-                validator: (val) => val!.isEmpty ? 'Enter email' : null,
-              ),
-              SizedBox(height: 10),
-              TextFormField(
-                controller: phoneController,
-                decoration: InputDecoration(labelText: 'Phone Number'),
-                keyboardType: TextInputType.phone,
-                validator: (val) => val!.isEmpty ? 'Enter phone number' : null,
-              ),
-              SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: submitForm,
-                child: Text('Submit'),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: Size(double.infinity, 50),
+            key: _formKey,
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: emailMobileController,
+                  decoration:
+                      const InputDecoration(labelText: 'Email or Mobile Number'),
+                  validator: (value) =>
+                      value!.isEmpty ? 'Enter email or mobile' : null,
                 ),
-              ),
-            ],
-          ),
-        ),
+                TextFormField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Password'),
+                  validator: (value) =>
+                      value!.isEmpty ? 'Enter password' : null,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        login();
+                      }
+                    },
+                    child: const Text('Login')),
+                TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const ShopkeeperSignUpPage()));
+                    },
+                    child: const Text('Sign Up')),
+                const SizedBox(height: 10),
+                Text(errorMsg, style: const TextStyle(color: Colors.red)),
+                TextButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('Forgot Password Clicked')));
+                    },
+                    child: const Text('Forgot Password?'))
+              ],
+            )),
       ),
     );
   }
 }
 
-// Consumer View
-class ConsumerViewPage extends StatelessWidget {
-  // Sample inventory items
-  final List<Map<String, dynamic>> items = [
-    {'name': 'Apple', 'price': 30, 'quantity': 50},
-    {'name': 'Banana', 'price': 10, 'quantity': 100},
-    {'name': 'Orange', 'price': 25, 'quantity': 40},
-    {'name': 'Milk', 'price': 50, 'quantity': 20},
-  ];
+class ShopkeeperSignUpPage extends StatefulWidget {
+  const ShopkeeperSignUpPage({super.key});
+
+  @override
+  State<ShopkeeperSignUpPage> createState() => _ShopkeeperSignUpPageState();
+}
+
+class _ShopkeeperSignUpPageState extends State<ShopkeeperSignUpPage> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController mobileController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
+  String errorMsg = '';
+
+  void signUp() async {
+    if (passwordController.text != confirmPasswordController.text) {
+      setState(() {
+        errorMsg = 'Passwords do not match';
+      });
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('name', nameController.text);
+    await prefs.setString('email', emailController.text);
+    await prefs.setString('mobile', mobileController.text);
+    await prefs.setString('password', passwordController.text);
+
+    setState(() {
+      errorMsg = '';
+    });
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text('Sign Up Successful')));
+    Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Shop Inventory')),
-      body: ListView.builder(
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return Card(
-            margin: EdgeInsets.all(8),
-            child: ListTile(
-              title: Text(item['name']),
-              subtitle: Text('Price: \$${item['price']} | Quantity: ${item['quantity']}'),
-            ),
-          );
-        },
+      appBar: AppBar(title: const Text('Shopkeeper Sign Up')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: nameController,
+                    decoration: const InputDecoration(labelText: 'Name'),
+                    validator: (value) =>
+                        value!.isEmpty ? 'Enter your name' : null,
+                  ),
+                  TextFormField(
+                    controller: emailController,
+                    decoration: const InputDecoration(labelText: 'Email'),
+                    validator: (value) =>
+                        value!.isEmpty ? 'Enter your email' : null,
+                  ),
+                  TextFormField(
+                    controller: mobileController,
+                    decoration:
+                        const InputDecoration(labelText: 'Mobile Number'),
+                    validator: (value) =>
+                        value!.isEmpty ? 'Enter your mobile number' : null,
+                  ),
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(labelText: 'Password'),
+                    validator: (value) =>
+                        value!.isEmpty ? 'Enter password' : null,
+                  ),
+                  TextFormField(
+                    controller: confirmPasswordController,
+                    obscureText: true,
+                    decoration:
+                        const InputDecoration(labelText: 'Confirm Password'),
+                    validator: (value) =>
+                        value!.isEmpty ? 'Confirm password' : null,
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          signUp();
+                        }
+                      },
+                      child: const Text('Sign Up')),
+                  const SizedBox(height: 10),
+                  Text(errorMsg, style: const TextStyle(color: Colors.red)),
+                ],
+              ),
+            )),
+      ),
+    );
+  }
+}
+
+class CustomerPage extends StatelessWidget {
+  const CustomerPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Customer Page')),
+      body: const Center(
+        child: Text('Customer Features Coming Soon'),
       ),
     );
   }
