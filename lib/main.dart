@@ -1,50 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+void main() => runApp(RetailApp());
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
+class RetailApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'InvenTrack',
+      title: 'Retail App',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const FrontPage(),
+      home: LandingPage(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
 
-class FrontPage extends StatelessWidget {
-  const FrontPage({super.key});
-
+/////////////////////////////
+// LANDING PAGE
+/////////////////////////////
+class LandingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('InvenTrack')),
+      appBar: AppBar(title: Text('Retail App Landing')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             ElevatedButton(
-              child: const Text('Shopkeeper'),
+              child: Text('Shopkeeper Sign Up / Login'),
               onPressed: () {
                 Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const ShopkeeperLoginPage()));
+                  context,
+                  MaterialPageRoute(builder: (_) => ShopkeeperSignUp()),
+                );
               },
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             ElevatedButton(
-              child: const Text('Customer'),
+              child: Text('Customer Sign Up / Login'),
               onPressed: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const CustomerPage()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => CustomerSignUp()),
+                );
               },
             ),
           ],
@@ -54,207 +52,296 @@ class FrontPage extends StatelessWidget {
   }
 }
 
-class ShopkeeperLoginPage extends StatefulWidget {
-  const ShopkeeperLoginPage({super.key});
-
+/////////////////////////////
+// SHOPKEEPER SIGN UP / LOGIN
+/////////////////////////////
+class ShopkeeperSignUp extends StatefulWidget {
   @override
-  State<ShopkeeperLoginPage> createState() => _ShopkeeperLoginPageState();
+  _ShopkeeperSignUpState createState() => _ShopkeeperSignUpState();
 }
 
-class _ShopkeeperLoginPageState extends State<ShopkeeperLoginPage> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController emailMobileController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  String errorMsg = '';
-
-  void login() async {
-    final prefs = await SharedPreferences.getInstance();
-    final storedEmail = prefs.getString('email') ?? '';
-    final storedMobile = prefs.getString('mobile') ?? '';
-    final storedPassword = prefs.getString('password') ?? '';
-
-    if ((emailMobileController.text == storedEmail ||
-            emailMobileController.text == storedMobile) &&
-        passwordController.text == storedPassword) {
-      setState(() {
-        errorMsg = '';
-      });
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Login Successful')));
-    } else {
-      setState(() {
-        errorMsg = 'Invalid credentials';
-      });
-    }
-  }
+class _ShopkeeperSignUpState extends State<ShopkeeperSignUp> {
+  final _shopNameController = TextEditingController();
+  final _shopkeeperNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Shopkeeper Login')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                TextFormField(
-                  controller: emailMobileController,
-                  decoration:
-                      const InputDecoration(labelText: 'Email or Mobile Number'),
-                  validator: (value) =>
-                      value!.isEmpty ? 'Enter email or mobile' : null,
+      appBar: AppBar(title: Text('Shopkeeper Sign Up / Login')),
+      body: ListView(
+        padding: EdgeInsets.all(16),
+        children: [
+          TextField(controller: _shopNameController, decoration: InputDecoration(labelText: 'Shop Name')),
+          TextField(controller: _shopkeeperNameController, decoration: InputDecoration(labelText: 'Shopkeeper Name')),
+          TextField(controller: _emailController, decoration: InputDecoration(labelText: 'Email')),
+          TextField(controller: _phoneController, decoration: InputDecoration(labelText: 'Phone'), keyboardType: TextInputType.phone),
+          TextField(controller: _addressController, decoration: InputDecoration(labelText: 'Address')),
+          TextField(controller: _passwordController, decoration: InputDecoration(labelText: 'Password'), obscureText: true),
+          SizedBox(height: 20),
+          ElevatedButton(
+            child: Text('Sign Up / Login'),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ShopkeeperDashboard(
+                    shopName: _shopNameController.text,
+                    shopkeeperName: _shopkeeperNameController.text,
+                    email: _emailController.text,
+                    phone: _phoneController.text,
+                    address: _addressController.text,
+                  ),
                 ),
-                TextFormField(
-                  controller: passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password'),
-                  validator: (value) =>
-                      value!.isEmpty ? 'Enter password' : null,
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        login();
-                      }
-                    },
-                    child: const Text('Login')),
-                TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const ShopkeeperSignUpPage()));
-                    },
-                    child: const Text('Sign Up')),
-                const SizedBox(height: 10),
-                Text(errorMsg, style: const TextStyle(color: Colors.red)),
-                TextButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('Forgot Password Clicked')));
-                    },
-                    child: const Text('Forgot Password?'))
-              ],
-            )),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 }
 
-class ShopkeeperSignUpPage extends StatefulWidget {
-  const ShopkeeperSignUpPage({super.key});
+/////////////////////////////
+// SHOPKEEPER DASHBOARD
+/////////////////////////////
+class ShopkeeperDashboard extends StatelessWidget {
+  final String shopName;
+  final String shopkeeperName;
+  final String email;
+  final String phone;
+  final String address;
 
-  @override
-  State<ShopkeeperSignUpPage> createState() => _ShopkeeperSignUpPageState();
-}
-
-class _ShopkeeperSignUpPageState extends State<ShopkeeperSignUpPage> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController mobileController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
-  String errorMsg = '';
-
-  void signUp() async {
-    if (passwordController.text != confirmPasswordController.text) {
-      setState(() {
-        errorMsg = 'Passwords do not match';
-      });
-      return;
-    }
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('name', nameController.text);
-    await prefs.setString('email', emailController.text);
-    await prefs.setString('mobile', mobileController.text);
-    await prefs.setString('password', passwordController.text);
-
-    setState(() {
-      errorMsg = '';
-    });
-
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Sign Up Successful')));
-    Navigator.pop(context);
-  }
+  ShopkeeperDashboard({
+    required this.shopName,
+    required this.shopkeeperName,
+    required this.email,
+    required this.phone,
+    required this.address,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final _shopNameController = TextEditingController(text: shopName);
+    final _shopkeeperNameController = TextEditingController(text: shopkeeperName);
+    final _emailController = TextEditingController(text: email);
+    final _phoneController = TextEditingController(text: phone);
+    final _addressController = TextEditingController(text: address);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Shopkeeper Sign Up')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Name'),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Enter your name' : null,
-                  ),
-                  TextFormField(
-                    controller: emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Enter your email' : null,
-                  ),
-                  TextFormField(
-                    controller: mobileController,
-                    decoration:
-                        const InputDecoration(labelText: 'Mobile Number'),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Enter your mobile number' : null,
-                  ),
-                  TextFormField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(labelText: 'Password'),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Enter password' : null,
-                  ),
-                  TextFormField(
-                    controller: confirmPasswordController,
-                    obscureText: true,
-                    decoration:
-                        const InputDecoration(labelText: 'Confirm Password'),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Confirm password' : null,
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          signUp();
-                        }
-                      },
-                      child: const Text('Sign Up')),
-                  const SizedBox(height: 10),
-                  Text(errorMsg, style: const TextStyle(color: Colors.red)),
-                ],
+      appBar: AppBar(title: Text('Shopkeeper Dashboard')),
+      body: ListView(
+        padding: EdgeInsets.all(16),
+        children: [
+          /////////////////////////////
+          // Primary Dashboard
+          /////////////////////////////
+          ExpansionTile(
+            initiallyExpanded: true,
+            title: Text('Primary Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
+            children: [
+              ListTile(
+                title: Text('Revenue %'),
+                subtitle: TextField(decoration: InputDecoration(hintText: 'Enter Revenue %')),
               ),
-            )),
+              ListTile(
+                title: Text('Profit/Loss %'),
+                subtitle: TextField(decoration: InputDecoration(hintText: 'Enter Profit/Loss %')),
+              ),
+              ListTile(
+                title: Text('Total Products'),
+                subtitle: TextField(decoration: InputDecoration(hintText: 'Enter total products')),
+              ),
+              ListTile(
+                title: Text('Low Stock'),
+                subtitle: TextField(decoration: InputDecoration(hintText: 'Enter low stock products')),
+              ),
+              ListTile(
+                title: Text('Top Selling Products'),
+                subtitle: TextField(decoration: InputDecoration(hintText: 'Enter top selling products')),
+              ),
+            ],
+          ),
+
+          /////////////////////////////
+          // POS
+          /////////////////////////////
+          ExpansionTile(
+            title: Text('POS', style: TextStyle(fontWeight: FontWeight.bold)),
+            children: [
+              ListTile(title: Text('Product Search / Selection'), subtitle: TextField(decoration: InputDecoration(hintText: 'Enter Product Name'))),
+              ListTile(title: Text('Quantity'), subtitle: TextField(decoration: InputDecoration(hintText: 'Enter Quantity'), keyboardType: TextInputType.number)),
+              ListTile(title: Text('Discount / Tax'), subtitle: TextField(decoration: InputDecoration(hintText: 'Enter Discount / Tax'))),
+              ListTile(title: Text('Total Bill'), subtitle: TextField(decoration: InputDecoration(hintText: 'Enter Total'))),
+            ],
+          ),
+
+          /////////////////////////////
+          // Inventory
+          /////////////////////////////
+          ExpansionTile(
+            title: Text('Inventory', style: TextStyle(fontWeight: FontWeight.bold)),
+            children: [
+              ListTile(title: Text('SKU (mandatory)'), subtitle: TextField()),
+              ListTile(title: Text('Product Name'), subtitle: TextField()),
+              ListTile(title: Text('Category'), subtitle: TextField()),
+              ListTile(title: Text('MRP'), subtitle: TextField()),
+              ListTile(title: Text('MSP'), subtitle: TextField()),
+              ListTile(title: Text('Price'), subtitle: TextField()),
+              ListTile(title: Text('Quantity'), subtitle: TextField()),
+              ListTile(title: Text('Last Restock'), subtitle: TextField()),
+            ],
+          ),
+
+          /////////////////////////////
+          // Notifications
+          /////////////////////////////
+          ExpansionTile(
+            title: Text('Notifications', style: TextStyle(fontWeight: FontWeight.bold)),
+            children: [
+              ListTile(title: Text('Notification 1: Stock Alert')),
+              ListTile(title: Text('Notification 2: New Message')),
+            ],
+          ),
+
+          /////////////////////////////
+          // Profile
+          /////////////////////////////
+          ExpansionTile(
+            title: Text('Profile', style: TextStyle(fontWeight: FontWeight.bold)),
+            children: [
+              ListTile(title: Text('Shop Name'), subtitle: TextField(controller: _shopNameController)),
+              ListTile(title: Text('Shopkeeper Name'), subtitle: TextField(controller: _shopkeeperNameController)),
+              ListTile(title: Text('Email'), subtitle: TextField(controller: _emailController)),
+              ListTile(title: Text('Phone'), subtitle: TextField(controller: _phoneController)),
+              ListTile(title: Text('Address'), subtitle: TextField(controller: _addressController)),
+              ListTile(title: Text('Change Password'), subtitle: TextField(obscureText: true, decoration: InputDecoration(hintText: 'New Password'))),
+              ListTile(title: ElevatedButton(child: Text('Delete Account'), onPressed: () {})),
+              ListTile(title: ElevatedButton(child: Text('Logout'), onPressed: () => Navigator.pop(context))),
+            ],
+          ),
+
+          /////////////////////////////
+          // Analysis
+          /////////////////////////////
+          ExpansionTile(
+            title: Text('Analysis', style: TextStyle(fontWeight: FontWeight.bold)),
+            children: [
+              ListTile(title: Text('Total Profit Gained'), subtitle: TextField(decoration: InputDecoration(hintText: 'Enter total profit'))),
+              ListTile(title: Text('Estimated Growth Rate'), subtitle: TextField(decoration: InputDecoration(hintText: 'Enter estimated growth'))),
+              ListTile(title: Text('Demand Forecast (5 products)'), subtitle: TextField(decoration: InputDecoration(hintText: 'Enter demand forecast'))),
+              ListTile(title: Text('Top Selling Products (5)'), subtitle: TextField(decoration: InputDecoration(hintText: 'Enter top selling products'))),
+              ListTile(title: Text('Total Sales (Daily/Weekly/Monthly/Yearly)'), subtitle: TextField(decoration: InputDecoration(hintText: 'Enter total sales'))),
+              ListTile(title: Text('Low Stock Products (editable)'), subtitle: TextField(decoration: InputDecoration(hintText: 'Enter low stock products'))),
+              ListTile(title: Text('Restock Recommendations (editable)'), subtitle: TextField(decoration: InputDecoration(hintText: 'Enter restock recommendations'))),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
-class CustomerPage extends StatelessWidget {
-  const CustomerPage({super.key});
+/////////////////////////////
+// CUSTOMER SIGN UP / LOGIN
+/////////////////////////////
+class CustomerSignUp extends StatefulWidget {
+  @override
+  _CustomerSignUpState createState() => _CustomerSignUpState();
+}
+
+class _CustomerSignUpState extends State<CustomerSignUp> {
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Customer Page')),
-      body: const Center(
-        child: Text('Customer Features Coming Soon'),
+      appBar: AppBar(title: Text('Customer Sign Up / Login')),
+      body: ListView(
+        padding: EdgeInsets.all(16),
+        children: [
+          TextField(controller: _nameController, decoration: InputDecoration(labelText: 'Full Name')),
+          TextField(controller: _emailController, decoration: InputDecoration(labelText: 'Email')),
+          TextField(controller: _phoneController, decoration: InputDecoration(labelText: 'Phone'), keyboardType: TextInputType.phone),
+          TextField(controller: _addressController, decoration: InputDecoration(labelText: 'Address')),
+          TextField(controller: _passwordController, decoration: InputDecoration(labelText: 'Password'), obscureText: true),
+          SizedBox(height: 20),
+          ElevatedButton(
+            child: Text('Sign Up / Login'),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CustomerDashboard(
+                    name: _nameController.text,
+                    email: _emailController.text,
+                    phone: _phoneController.text,
+                    address: _addressController.text,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/////////////////////////////
+// CUSTOMER DASHBOARD
+/////////////////////////////
+class CustomerDashboard extends StatelessWidget {
+  final String name;
+  final String email;
+  final String phone;
+  final String address;
+
+  CustomerDashboard({
+    required this.name,
+    required this.email,
+    required this.phone,
+    required this.address,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final _nameController = TextEditingController(text: name);
+    final _emailController = TextEditingController(text: email);
+    final _phoneController = TextEditingController(text: phone);
+    final _addressController = TextEditingController(text: address);
+
+    return Scaffold(
+      appBar: AppBar(title: Text('Customer Dashboard')),
+      body: ListView(
+        padding: EdgeInsets.all(16),
+        children: [
+          ExpansionTile(
+            title: Text('Profile', style: TextStyle(fontWeight: FontWeight.bold)),
+            children: [
+              ListTile(title: TextField(controller: _nameController, decoration: InputDecoration(labelText: 'Full Name'))),
+              ListTile(title: TextField(controller: _emailController, decoration: InputDecoration(labelText: 'Email'))),
+              ListTile(title: TextField(controller: _phoneController, decoration: InputDecoration(labelText: 'Phone'))),
+              ListTile(title: TextField(controller: _addressController, decoration: InputDecoration(labelText: 'Address'))),
+              ListTile(
+                title: ElevatedButton(
+                  child: Text('Logout'),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ],
+          ),
+          ExpansionTile(title: Text('Home / Quick Access'), children: [
+            ListTile(title: Text('Categories, Products, Cart/Favorites')),
+          ]),
+        ],
       ),
     );
   }
